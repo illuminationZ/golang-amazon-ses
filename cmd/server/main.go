@@ -8,7 +8,6 @@ import (
 	"golang-aws-ses/config"
 	"golang-aws-ses/handlers"
 	"golang-aws-ses/queue"
-	"golang-aws-ses/services"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -19,19 +18,9 @@ func main() {
 	// Load configuration
 	cfg := config.LoadConfig()
 
-	// Initialize services
-	emailService := services.NewEmailService()
+	// Initialize queue service
 	queueService := queue.NewQueueService(cfg.RedisAddr, cfg.RedisPassword, cfg.RedisDB)
 	defer queueService.Close()
-
-	// Start worker in a separate goroutine (for development/single instance deployment)
-	workerService := queue.NewWorkerService(cfg.RedisAddr, cfg.RedisPassword, cfg.RedisDB, emailService)
-	go func() {
-		log.Println("Starting embedded worker...")
-		if err := workerService.Start(); err != nil {
-			log.Printf("Worker error: %v", err)
-		}
-	}()
 
 	// Initialize handlers
 	healthHandler := handlers.NewHealthHandler()
@@ -59,6 +48,6 @@ func main() {
 	app.Post("/transactions", transactionHandler.ProcessTransaction)
 
 	// Start server
-	log.Printf("Server starting on port %s", cfg.Port)
+	log.Printf("API server starting on port %s", cfg.Port)
 	log.Fatal(app.Listen(":" + cfg.Port))
 }

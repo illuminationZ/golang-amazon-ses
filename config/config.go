@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -12,6 +13,9 @@ type Config struct {
 	SenderEmail    string
 	RecipientEmail string
 	Port           string
+	RedisAddr      string
+	RedisPassword  string
+	RedisDB        int
 }
 
 // LoadConfig loads configuration from environment variables
@@ -23,11 +27,23 @@ func LoadConfig() *Config {
 		SenderEmail:    os.Getenv("SENDER_EMAIL"),
 		RecipientEmail: os.Getenv("RECIPIENT_EMAIL"),
 		Port:           os.Getenv("PORT"),
+		RedisAddr:      os.Getenv("REDIS_ADDR"),
+		RedisPassword:  os.Getenv("REDIS_PASSWORD"),
 	}
 
-	// Set default port if not specified
+	// Parse Redis DB
+	if redisDBStr := os.Getenv("REDIS_DB"); redisDBStr != "" {
+		if db, err := strconv.Atoi(redisDBStr); err == nil {
+			config.RedisDB = db
+		}
+	}
+
+	// Set default values
 	if config.Port == "" {
 		config.Port = "3000"
+	}
+	if config.RedisAddr == "" {
+		config.RedisAddr = "localhost:6379"
 	}
 
 	// Validate required environment variables

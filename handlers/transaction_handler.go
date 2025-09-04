@@ -6,21 +6,21 @@ import (
 
 	"golang-aws-ses/config"
 	"golang-aws-ses/models"
-	"golang-aws-ses/services"
+	"golang-aws-ses/queue"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 // TransactionHandler handles transaction-related requests
 type TransactionHandler struct {
-	emailService *services.EmailService
+	queueService *queue.QueueService
 	config       *config.Config
 }
 
 // NewTransactionHandler creates a new TransactionHandler instance
-func NewTransactionHandler(emailService *services.EmailService, cfg *config.Config) *TransactionHandler {
+func NewTransactionHandler(queueService *queue.QueueService, cfg *config.Config) *TransactionHandler {
 	return &TransactionHandler{
-		emailService: emailService,
+		queueService: queueService,
 		config:       cfg,
 	}
 }
@@ -35,18 +35,20 @@ func (h *TransactionHandler) ProcessTransaction(c *fiber.Ctx) error {
 		})
 	}
 
-	// Send email notification
+	// Enqueue email notification task
 	ctx := context.Background()
-	if err := h.emailService.SendTransactionEmail(ctx, h.config.SenderEmail, h.config.RecipientEmail, req); err != nil {
-		log.Printf("Error sending email: %v", err)
+	subject := "Transaction Notification"
+
+	if err := h.queueService.EnqueueEmailTask(ctx, h.config.SenderEmail, h.config.RecipientEmail, subject, req.Amount, req.Description); err != nil {
+		log.Printf("Error enqueuing email task: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(models.TransactionResponse{
 			Status:  "error",
-			Message: "Transaction processed but email notification failed",
+			Message: "Transaction processed but email notification failed to queue",
 		})
 	}
 
 	return c.JSON(models.TransactionResponse{
 		Status:  "success",
-		Message: "Transaction processed successfully and email notification sent",
+		Message: "Transaction processed successfully and email notification queued",
 	})
 }
