@@ -3,108 +3,50 @@
 package main
 
 import (
-	"context"
-	"flag"
-	"fmt"
-	"os"
+	"log"
 
-	"golang-aws-ses/sesclient"
+	"golang-aws-ses/config"
+	"golang-aws-ses/handlers"
+	"golang-aws-ses/services"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ses"
-	"github.com/aws/aws-sdk-go-v2/service/ses/types"
-	"github.com/joho/godotenv"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
-
-const (
-	// Subject is the subject line for the email
-	Subject = "Amazon SES Test (AWS SDK for Go)"
-
-	// HTMLBody is the HTML body for the email
-	HTMLBody = "<h1>Amazon SES Test Email (AWS SDK for Go)</h1><p>This email was sent with " +
-		"<a href='https://aws.amazon.com/ses/'>Amazon SES</a> using the " +
-		"<a href='https://aws.amazon.com/sdk-for-go/'>AWS SDK for Go</a>.</p>"
-
-	// TextBody is the email body for recipients with non-HTML email clients
-	TextBody = "This email was sent with Amazon SES using the AWS SDK for Go."
-
-	// CharSet is the character encoding for the email
-	CharSet = "UTF-8"
-)
-
-// SendMsg sends an email message to an Amazon SES recipient
-// Inputs:
-//
-//	svc is the Amazon SES service client
-//	sender is the email address in the From field
-//	recipient is the email address in the To field
-//
-// Output:
-//
-//	If success, nil
-//	Otherwise, an error from the call to SendEmail
-//
-// SendMsg sends an email message to an Amazon SES recipient
-func SendMsg(ctx context.Context, svc *ses.Client, sender, recipient, subject string) error {
-	_, err := svc.SendEmail(ctx, &ses.SendEmailInput{
-		Destination: &types.Destination{
-			CcAddresses: []string{},
-			ToAddresses: []string{recipient},
-		},
-		Message: &types.Message{
-			Body: &types.Body{
-				Html: &types.Content{
-					Charset: aws.String(CharSet),
-					Data:    aws.String(HTMLBody),
-				},
-				Text: &types.Content{
-					Charset: aws.String(CharSet),
-					Data:    aws.String(TextBody),
-				},
-			},
-			Subject: &types.Content{
-				Charset: aws.String(CharSet),
-				Data:    aws.String(subject),
-			},
-		},
-		Source: aws.String(sender),
-	})
-	return err
-}
 
 func main() {
-	_ = godotenv.Load()
+	// Load configuration
+	cfg := config.LoadConfig()
 
-	senderEmail := os.Getenv("SENDER_EMAIL")
-	if senderEmail == "" {
-		fmt.Println("You must set the SENDER_EMAIL environment variable to your verified sender email address.")
-		return
-	}
-	recipientEmail := os.Getenv("RECIPIENT_EMAIL")
-	if recipientEmail == "" {
-		fmt.Println("You must set the RECIPIENT_EMAIL environment variable to your verified recipient email address.")
-		return
-	}
-	sender := flag.String("f", senderEmail, "The email address for the 'From' field")
-	recipient := flag.String("t", recipientEmail, "The email address for the 'To' field")
-	subject := flag.String("s", "Amazon SES Test (AWS SDK for Go)", "The text for the 'Subject' field")
-	flag.Parse()
+	// Initialize services
+	emailService := services.NewEmailService()
 
-	if *sender == "" || *recipient == "" || *subject == "" {
-		fmt.Println("You must supply an email address for the sender and recipient, and a subject")
-		fmt.Println("-f SENDER -t RECIPIENT -s SUBJECT")
-		return
-	}
+	// Initialize handlers
+	healthHandler := handlers.NewHealthHandler()
+	transactionHandler := handlers.NewTransactionHandler(emailService, cfg)
 
-	// initialize context and SES client helper
-	ctx := context.Background()
-	svc := sesclient.NewSESClient()
-	// send the email
-	if err := SendMsg(ctx, svc, *sender, *recipient, *subject); err != nil {
-		fmt.Println("Got an error sending message:")
-		fmt.Println(err.Error())
-		return
-	}
+	// Initialize Fiber app
+	app := fiber.New(fiber.Config{
+		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
+			code := fiber.StatusInternalServerError
+			if e, ok := err.(*fiber.Error); ok {
+				code = e.Code
+			}
+			return ctx.Status(code).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		},
+	})
 
-	fmt.Println("Email sent to address: " + *recipient)
+	// Middleware
+	app.Use(logger.New())
+	app.Use(cors.New())
+
+	// Routes
+	app.Get("/", healthHandler.HealthCheck)
+	app.Post("/transactions", transactionHandler.ProcessTransaction)
+
+	// Start server
+	log.Printf("Server starting on port %s", cfg.Port)
+	log.Fatal(app.Listen(":" + cfg.Port))
 }
