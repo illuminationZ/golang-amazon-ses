@@ -29,7 +29,6 @@ AWS_REGION=your-aws-region
 AWS_ACCESS_KEY_ID=your-access-key
 AWS_SECRET_ACCESS_KEY=your-secret-key
 SENDER_EMAIL=your-verified-sender@example.com
-RECIPIENT_EMAIL=recipient@example.com
 PORT=8080
 
 # Redis Configuration for Queue
@@ -89,6 +88,7 @@ Process a transaction and **queue** an email notification for asynchronous proce
 **Request Body:**
 ```json
 {
+  "email": "recipient@example.com",
   "amount": 99.99,
   "description": "Payment for services"
 }
@@ -119,7 +119,7 @@ curl http://localhost:8080/
 # Process a transaction
 curl -X POST http://localhost:8080/transactions \
   -H "Content-Type: application/json" \
-  -d '{"amount": 99.99, "description": "Test transaction"}'
+  -d '{"email": "user@example.com", "amount": 99.99, "description": "Test transaction"}'
 ```
 
 ## Email Template

@@ -35,11 +35,26 @@ func (h *TransactionHandler) ProcessTransaction(c *fiber.Ctx) error {
 		})
 	}
 
+	// Validate required fields
+	if req.Email == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(models.TransactionResponse{
+			Status:  "error",
+			Message: "Email is required",
+		})
+	}
+
+	if req.Amount <= 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(models.TransactionResponse{
+			Status:  "error",
+			Message: "Amount must be greater than 0",
+		})
+	}
+
 	// Enqueue email notification task
 	ctx := context.Background()
 	subject := "Transaction Notification"
 
-	if err := h.queueService.EnqueueEmailTask(ctx, h.config.SenderEmail, h.config.RecipientEmail, subject, req.Amount, req.Description); err != nil {
+	if err := h.queueService.EnqueueEmailTask(ctx, h.config.SenderEmail, req.Email, subject, req.Amount, req.Description); err != nil {
 		log.Printf("Error enqueuing email task: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(models.TransactionResponse{
 			Status:  "error",

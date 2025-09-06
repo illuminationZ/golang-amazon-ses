@@ -2,6 +2,7 @@ package models
 
 // TransactionRequest represents the API request for transactions
 type TransactionRequest struct {
+	Email       string  `json:"email,omitempty"`
 	Amount      float64 `json:"amount,omitempty"`
 	Description string  `json:"description,omitempty"`
 }

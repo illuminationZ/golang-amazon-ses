@@ -35,10 +35,9 @@ func NewSESClient() *ses.Client {
 	// If environment credentials are set, use them explicitly
 	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
 	secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
-	token := os.Getenv("AWS_SESSION_TOKEN")
 	if accessKey != "" && secretKey != "" {
 		opts = append(opts, config.WithCredentialsProvider(
-			credentials.NewStaticCredentialsProvider(accessKey, secretKey, token),
+			credentials.NewStaticCredentialsProvider(accessKey, secretKey, ""),
 		))
 	}
 	cfg, err := config.LoadDefaultConfig(ctx, opts...)
