@@ -29,9 +29,9 @@ func NewWorkerService(redisAddr, redisPassword string, redisDB int, emailService
 	server := asynq.NewServer(redisOpt, asynq.Config{
 		Concurrency: 10,
 		Queues: map[string]int{
-			"critical": 6,
-			"default":  3,
-			"low":      1,
+			"critical": 1000,
+			"default":  100,
+			"low":      50,
 		},
 	})
 
