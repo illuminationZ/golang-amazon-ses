@@ -1,5 +1,10 @@
 # Amazon SES Transaction API with Queue
 
+[![CI](https://github.com/illuminationZ/golang-amazon-ses/actions/workflows/ci.yml/badge.svg)](https://github.com/illuminationZ/golang-amazon-ses/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/illuminationZ/golang-amazon-ses)](https://goreportcard.com/report/github.com/illuminationZ/golang-amazon-ses)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/illuminationZ/golang-amazon-ses)](https://golang.org/)
+
 A Go-based REST API using Fiber framework that processes transactions and sends email notifications via Amazon SES using an asynchronous queue system powered by Asynq and Redis.
 
 ## Features
@@ -192,7 +197,29 @@ Asynq provides built-in monitoring:
 - **Redis Connection**: Automatic connection health checking
 - **Worker Status**: Graceful shutdown signals
 
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to get started.
+
+### Quick Start for Contributors
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/my-feature`
+3. Make your changes and add tests
+4. Run tests: `go test ./...`
+5. Submit a pull request
+
+## Security
+
+For security concerns, please review our [Security Policy](SECURITY.md). Do not report security vulnerabilities through public GitHub issues.
+
 ## Project Structure
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 ```
 ├── main.go                    # Application entry point with embedded worker

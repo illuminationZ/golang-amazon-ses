@@ -36,17 +36,10 @@ func (h *TransactionHandler) ProcessTransaction(c *fiber.Ctx) error {
 	}
 
 	// Validate required fields
-	if req.Email == "" {
+	if err := req.Validate(); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.TransactionResponse{
 			Status:  "error",
-			Message: "Email is required",
-		})
-	}
-
-	if req.Amount <= 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(models.TransactionResponse{
-			Status:  "error",
-			Message: "Amount must be greater than 0",
+			Message: err.Error(),
 		})
 	}
 
