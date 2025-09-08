@@ -1,0 +1,28 @@
+# Global code owners
+# These owners will be the default owners for everything in the repo
+# Unless a later match takes precedence, these users will be requested for
+# review when someone opens a pull request.
+* @illuminationZ
+
+# Configuration files
+/.github/ @illuminationZ
+/go.mod @illuminationZ
+/go.sum @illuminationZ
+*.yml @illuminationZ
+*.yaml @illuminationZ
+Dockerfile* @illuminationZ
+
+# Security and documentation
+/SECURITY.md @illuminationZ
+/LICENSE @illuminationZ
+/CONTRIBUTING.md @illuminationZ
+/README.md @illuminationZ
+
+# Core application files
+/main.go @illuminationZ
+/config/ @illuminationZ
+/handlers/ @illuminationZ
+/services/ @illuminationZ
+/models/ @illuminationZ
+/queue/ @illuminationZ
+/sesclient/ @illuminationZ
