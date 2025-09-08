@@ -29,13 +29,14 @@ func main() {
 
 	go func() {
 		<-c
-		log.Println("Received shutdown signal")
+		log.Println("Received shutdown signal, shutting down gracefully...")
 		workerService.Stop()
+		os.Exit(0)
 	}()
 
 	// Start the worker
 	log.Println("Starting worker...")
 	if err := workerService.Start(); err != nil {
-		log.Fatalf("Failed to start worker: %v", err)
+		log.Printf("Worker stopped: %v", err)
 	}
 }

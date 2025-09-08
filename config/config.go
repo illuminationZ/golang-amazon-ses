@@ -8,6 +8,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// TODO: env v11, autoload
+
 // Config holds all configuration for the application
 type Config struct {
 	SenderEmail   string

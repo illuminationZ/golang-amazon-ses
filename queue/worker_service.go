@@ -94,8 +94,9 @@ func (w *WorkerService) Start() error {
 	return w.server.Run(w.mux)
 }
 
-// Stop stops the worker server
+// Stop stops the worker server gracefully
 func (w *WorkerService) Stop() {
 	log.Println("Stopping worker server...")
 	w.server.Shutdown()
+	log.Println("Worker server stopped gracefully")
 }

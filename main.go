@@ -4,6 +4,9 @@ package main
 
 import (
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"golang-aws-ses/config"
 	"golang-aws-ses/handlers"
@@ -58,7 +61,29 @@ func main() {
 	app.Get("/", healthHandler.HealthCheck)
 	app.Post("/transactions", transactionHandler.ProcessTransaction)
 
+	// Handle graceful shutdown
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-c
+		log.Println("Received shutdown signal, shutting down gracefully...")
+
+		// Shutdown HTTP server
+		log.Println("Shutting down HTTP server...")
+		if err := app.Shutdown(); err != nil {
+			log.Printf("Error shutting down server: %v", err)
+		}
+
+		// Shutdown worker
+		log.Println("Shutting down worker...")
+		workerService.Stop()
+		log.Println("Worker shut down gracefully")
+	}()
+
 	// Start server
 	log.Printf("Server starting on port %s", cfg.Port)
-	log.Fatal(app.Listen(":" + cfg.Port))
+	if err := app.Listen(":" + cfg.Port); err != nil {
+		log.Printf("Server stopped: %v", err)
+	}
 }
